@@ -94,7 +94,8 @@ export function AuroraBackground({ calm = false }: { calm?: boolean }) {
       <Animated.View style={[styles.layer, frame, flareStyle]}>
         <Image source={FLARE} style={styles.fill} resizeMode="stretch" />
       </Animated.View>
-      <Image source={VIGNETTE} style={StyleSheet.absoluteFill} resizeMode="stretch" />
+      {/* Explicit size: with absoluteFill alone, iPad drew the vignette at its intrinsic size, leaving a hard edge. */}
+      <Image source={VIGNETTE} style={[styles.layer, { left: 0, top: 0, width, height }]} resizeMode="stretch" />
       <Image source={GRAIN} style={[StyleSheet.absoluteFill, styles.grain]} resizeMode="repeat" />
     </View>
   );

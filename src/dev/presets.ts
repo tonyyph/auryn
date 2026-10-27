@@ -1,4 +1,5 @@
 import { boardFromValues, type Session, type Stats } from '../engine';
+import storeSessions from './storeSessions.json';
 
 /** Dev-only boards for previews and simulator screenshots. Never reachable in production. */
 const make = (values: number[][], score: number, moves: number, extra: Partial<Session> = {}): Session => {
@@ -6,7 +7,26 @@ const make = (values: number[][], score: number, moves: number, extra: Partial<S
   return { gameId: `dev-${score}`, board, undo: null, celebrated: false, finishCounted: false, winCounted: false, bestAtStart: 0, ...extra };
 };
 
-export const PRESETS: Record<string, { session: Session; stats?: Partial<Stats> }> = {
+/**
+ * `rng` resumes the tile spawner mid-sequence (engine seededRng state), so swipes made
+ * after loading spawn exactly what the store-capture simulation planned.
+ */
+export type Preset = { session: Session; stats?: Partial<Stats>; rng?: number };
+
+type StoreSnapshot = { note: string; rng: number; session: Session; stats: Stats };
+
+/**
+ * Real games for App Store captures: played move by move through the engine by
+ * auryn-store-previews/scripts/simulate.ts. Loaded as `store-<name>`, e.g. `store-combo`.
+ */
+const store: Record<string, Preset> = Object.fromEntries(
+  Object.entries(storeSessions.snapshots as Record<string, StoreSnapshot>).map(([name, s]) => [`store-${name}`, { session: s.session, stats: s.stats, rng: s.rng }]),
+);
+const storeFinal = storeSessions.final as { session: Session; stats: Stats };
+
+export const PRESETS: Record<string, Preset> = {
+  ...store,
+  'store-final': { session: storeFinal.session, stats: storeFinal.stats },
   sparse: {
     session: make([[0, 0, 0, 0], [0, 2, 0, 0], [0, 0, 0, 4], [0, 0, 0, 0]], 0, 1),
   },

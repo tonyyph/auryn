@@ -149,6 +149,13 @@ Params: `preset` (sparse, mid, late, combo, nearWin, nearOver, full, new), `scre
 (game, help, stats, settings, preview), `lang` (en, vi), `pad` and `rm` (0/1), `moves`
 (comma list), `burst=1` (40 ms between moves), `undo=1` (undo mid-slide), `reset=stats`.
 
+Store captures use `preset=store-<name>` (hero, mechanic, combo, comboLead, nearWin, nearWinLead,
+late, nearOver, nearOverLead, final): real games played by the engine in
+`~/auryn-store-previews/scripts/simulate.ts`, saved in `src/dev/storeSessions.json` together with the
+spawner state, so swipes after loading spawn exactly what was planned. `sfxlog=1` prints each sound
+with a timestamp (`[auryn-sfx]`) and mutes LogBox for clean recordings. Every dev link now resets the
+navigation stack first; a cold launch's resumed game no longer stays mounted underneath.
+
 ## Assets and licences
 
 - **Fonts:** Unbounded (display) and Manrope (body, tile numerals), both SIL Open Font License 1.1,

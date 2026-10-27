@@ -37,6 +37,12 @@ const VOLUME: Record<SoundName, number> = {
 const players = new Map<SoundName, AudioPlayer>();
 let ready = false;
 
+/** Dev-only: print each sound with a timestamp so store-preview captures can rebuild the audio track. */
+let soundLog = false;
+export const setSoundLog = (on: boolean) => {
+  soundLog = on;
+};
+
 export async function initFeedback() {
   if (ready) return;
   ready = true;
@@ -59,6 +65,7 @@ export async function initFeedback() {
 
 function play(name: SoundName) {
   if (!useAppStore.getState().settings.sound) return;
+  if (__DEV__ && soundLog) console.log(`[auryn-sfx] ${name} ${Date.now()}`);
   const p = players.get(name);
   if (!p) return;
   try {

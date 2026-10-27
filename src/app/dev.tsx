@@ -1,8 +1,9 @@
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
-import { View } from 'react-native';
-import { emptyStats, scriptedRng } from '../engine';
+import { LogBox, View } from 'react-native';
+import { emptyStats, scriptedRng, seededRng } from '../engine';
 import { PRESETS } from '../dev/presets';
+import { setSoundLog } from '../feedback/feedback';
 import { setRng, useAppStore } from '../state/appStore';
 
 /**
@@ -10,6 +11,7 @@ import { setRng, useAppStore } from '../state/appStore';
  *   auryn://dev?preset=nearWin&moves=left
  *   auryn://dev?screen=settings&lang=vi
  *   auryn://dev?reset=stats&screen=stats
+ *   auryn://dev?preset=store-combo&sfxlog=1   (store captures: planned spawns + sound log)
  * Production builds redirect home without reading any parameter.
  */
 export default function Dev() {
@@ -18,7 +20,7 @@ export default function Dev() {
 }
 
 function DevLink() {
-  const p = useLocalSearchParams<{ preset?: string; screen?: string; lang?: string; moves?: string; reset?: string; pad?: string; rm?: string; seed?: string; burst?: string; undo?: string }>();
+  const p = useLocalSearchParams<{ preset?: string; screen?: string; lang?: string; moves?: string; reset?: string; pad?: string; rm?: string; seed?: string; burst?: string; undo?: string; sfxlog?: string }>();
   useEffect(() => {
     const s = useAppStore.getState();
     if (p.lang === 'en' || p.lang === 'vi') s.updateSettings({ language: p.lang });
@@ -26,11 +28,20 @@ function DevLink() {
     if (p.rm) s.updateSettings({ reduceMotion: p.rm === '1' });
     if (p.reset === 'stats') useAppStore.setState({ stats: emptyStats(), onboarding: { hintMoves: 0 } });
     if (p.seed) setRng(scriptedRng([0, 0.5]));
+    if (p.sfxlog) {
+      setSoundLog(p.sfxlog === '1');
+      // Store captures: keep dev warning toasts out of the recorded frames.
+      LogBox.ignoreAllLogs(p.sfxlog === '1');
+    }
     const preset = p.preset ? PRESETS[p.preset] : undefined;
+    if (preset?.rng !== undefined) setRng(seededRng(preset.rng));
     if (preset) s.loadSession(preset.session, preset.stats);
     if (p.preset === 'new') s.newGame();
     const screen = p.screen ?? (preset || p.preset === 'new' ? 'game' : undefined);
     const target = screen === 'help' ? '/game?help=1' : screen === 'game' ? '/game' : screen === 'stats' ? '/stats' : screen === 'settings' ? '/settings' : screen === 'preview' ? '/preview' : '/';
+    // Start from a clean stack: a cold launch may already have pushed the game under this link,
+    // and a second mounted board would play every sound twice.
+    if (router.canDismiss()) router.dismissAll();
     router.replace(target);
     if (p.moves && target.startsWith('/game')) {
       // Moves are fed through the store after the board mounts, spaced like quick swipes.
@@ -39,6 +50,6 @@ function DevLink() {
       // undo=1: undo 50 ms after the last move, i.e. in the middle of its slide.
       if (p.undo) setTimeout(() => useAppStore.getState().undo(), 700 + (list.length - 1) * (p.burst ? 40 : 260) + 50);
     }
-  }, [p.preset, p.screen, p.lang, p.moves, p.reset, p.pad, p.rm, p.seed, p.burst, p.undo]);
+  }, [p.preset, p.screen, p.lang, p.moves, p.reset, p.pad, p.rm, p.seed, p.burst, p.undo, p.sfxlog]);
   return <View />;
 }
