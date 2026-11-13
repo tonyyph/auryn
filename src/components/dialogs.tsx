@@ -3,7 +3,7 @@ import { AccessibilityInfo, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
 import { formatNumber, useLanguage, useStrings } from '../i18n';
 import { useReduceMotion } from '../state/environment';
-import { alpha, colors, fonts, keyTones, space, tabular, type, type KeyTone } from '../theme';
+import { slab, alpha, colors, fonts, keyTones, space, tabular, type, type KeyTone } from '../theme';
 import { Icon } from './Icon';
 import { NumberTile } from './NumberTile';
 import { Overlay } from './Overlay';
@@ -159,11 +159,15 @@ export function HowToPlaySheet({ onClose }: { onClose: () => void }) {
   const s = 34;
   const arrow = <Icon name="arrowRight" size={18} strokeWidth={2.4} color={colors.text.mint} />;
   const illustrations = [
+    // Before → after: the tile travels to the far end of its row.
     <View key="a" style={styles.illo}>
       <NumberTile value={2} side={s} />
+      <View style={[styles.ghostCell, { width: s, height: s }]} />
+      <View style={[styles.ghostCell, { width: s, height: s }]} />
       {arrow}
       <View style={[styles.ghostCell, { width: s, height: s }]} />
       <View style={[styles.ghostCell, { width: s, height: s }]} />
+      <NumberTile value={2} side={s} />
     </View>,
     <View key="b" style={styles.illo}>
       <NumberTile value={2} side={s} />
@@ -226,8 +230,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border.subtle,
     borderTopColor: colors.border.default,
-    borderBottomWidth: 4,
-    borderBottomColor: '#070C17',
+    boxShadow: slab(4, '#070C17'),
+    marginBottom: 4,
   },
   plateValue: { fontFamily: fonts.display, fontSize: 19, lineHeight: 26, color: colors.text.primary, ...tabular },
   final: { alignItems: 'flex-start' },
@@ -242,13 +246,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: keyTones.mint.bottom,
-    borderBottomWidth: 3,
-    borderBottomColor: keyTones.mint.depth,
+    boxShadow: slab(3, keyTones.mint.depth),
     transform: [{ rotate: '-6deg' }],
   },
   stepNumberText: { fontFamily: fonts.display, fontSize: 15, color: keyTones.mint.text },
   stepTitle: { fontFamily: fonts.display, fontSize: 17, lineHeight: 24, color: colors.text.primary },
   stepBody: { marginTop: 2 },
   illo: { flexDirection: 'row', alignItems: 'center', gap: space[2], marginTop: space[3] },
-  ghostCell: { borderRadius: 9, backgroundColor: colors.surface.cellTop, borderTopWidth: 2, borderTopColor: 'rgba(0,0,0,0.38)' },
+  // Recessed socket, darker than the sheet so it reads as an empty cell.
+  ghostCell: {
+    borderRadius: 9,
+    backgroundColor: '#0A1222',
+    borderWidth: 1,
+    borderColor: 'rgba(196,220,255,0.07)',
+    borderTopWidth: 2,
+    borderTopColor: 'rgba(0,0,0,0.45)',
+  },
 });

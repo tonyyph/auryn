@@ -6,6 +6,12 @@ export const duration = {
   fast: 110,
   /** Tile slide. */
   move: 120,
+  /**
+   * When the merged value, pulse, spawn and sound land. The slide eases out hard (≈98% of
+   * the distance by 85 ms), so resolving at the very end leaves tiles parked on their old
+   * value for a beat; resolving here makes the swap coincide with the visual arrival.
+   */
+  resolve: 80,
   /** Merge pulse (1 → 1.06 → 1). */
   pulse: 150,
   spawn: 130,

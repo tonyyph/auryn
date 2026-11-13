@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { feedback } from '../feedback/feedback';
-import { alpha, colors, duration, fonts, keyTones, MIN_TOUCH, radius, space, spring, type, type KeyTone } from '../theme';
+import { alpha, colors, duration, fonts, keyTones, MIN_TOUCH, radius, slab, space, spring, type, type KeyTone } from '../theme';
 import { Icon, type IconName } from './Icon';
 
 /**
@@ -183,9 +183,11 @@ export function ControlButton({ icon, label, onPress, disabled, tone, badge }: {
 }
 
 /** A tilted label slapped on top of something: "NEW BEST!", "MILESTONE". */
+const STICKER_DEPTH = 2.5;
+
 export function Sticker({ text, tone = keyTones.gold, rotate = -4, style }: { text: string; tone?: KeyTone; rotate?: number; style?: StyleProp<ViewStyle> }) {
   return (
-    <View style={[styles.sticker, { backgroundColor: tone.bottom, borderBottomColor: tone.depth, transform: [{ rotate: `${rotate}deg` }] }, style]}>
+    <View style={[styles.sticker, { backgroundColor: tone.bottom, boxShadow: slab(STICKER_DEPTH, tone.depth), transform: [{ rotate: `${rotate}deg` }] }, style]}>
       <Text style={[styles.stickerText, { color: tone.text }]} numberOfLines={1} maxFontSizeMultiplier={1.2}>
         {text}
       </Text>
@@ -208,8 +210,8 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border.subtle,
     borderTopColor: colors.border.default,
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgba(3, 6, 14, 0.75)',
+    boxShadow: slab(3, 'rgba(3, 6, 14, 0.75)'),
+    marginBottom: 3,
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: space[2] },
   slab: { position: 'absolute', left: 0, right: 0, bottom: 0 },
@@ -230,7 +232,7 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     paddingBottom: 3,
     borderRadius: 7,
-    borderBottomWidth: 2.5,
+    marginBottom: STICKER_DEPTH,
   },
   stickerText: { fontFamily: fonts.display, fontSize: 10.5, lineHeight: 15, letterSpacing: 1 },
 });

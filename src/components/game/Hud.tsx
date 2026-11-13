@@ -5,7 +5,7 @@ import { maxTile } from '../../engine';
 import { formatNumber, useLanguage, useStrings } from '../../i18n';
 import { useAppStore } from '../../state/appStore';
 import { useReduceMotion } from '../../state/environment';
-import { alpha, colors, duration, easing, fonts, keyTones, shade, tileMaterial, type KeyTone } from '../../theme';
+import { slab, alpha, colors, duration, easing, fonts, keyTones, shade, tileMaterial, type KeyTone } from '../../theme';
 import { NumberTile } from '../NumberTile';
 import { ladderSteps } from './ladder';
 
@@ -81,7 +81,7 @@ export function ComboCallout() {
           text: record ? t.game.newTile(formatNumber(made, lang)) : t.game.combo(merges.length),
           tone: record ? tileTone(made) : keyTones.mint,
         }));
-        const land = duration.move;
+        const land = reduceMotion ? duration.instant : duration.resolve;
         o.set(withDelay(land, withSequence(withTiming(1, { duration: 90 }), withTiming(1, { duration: 520 }), withTiming(0, { duration: 260, easing: easing.exit }))));
         if (!reduceMotion) {
           s.set(0.6);
@@ -96,7 +96,7 @@ export function ComboCallout() {
     <View pointerEvents="none" style={styles.calloutLayer} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
       <Animated.View style={style}>
         {callout ? (
-          <View key={callout.key} style={[styles.callout, { backgroundColor: callout.tone.bottom, borderBottomColor: callout.tone.depth, boxShadow: `0 10px 28px ${alpha(callout.tone.glow ?? colors.shadow, 0.45)}` }]}>
+          <View key={callout.key} style={[styles.callout, { backgroundColor: callout.tone.bottom, boxShadow: `${slab(4, callout.tone.depth)}, 0 12px 28px ${alpha(callout.tone.glow ?? colors.shadow, 0.45)}` }]}>
             <Text style={[styles.calloutText, { color: callout.tone.text }]} allowFontScaling={false}>
               {callout.text}
             </Text>
@@ -126,7 +126,8 @@ const styles = StyleSheet.create({
   },
   next: { width: 34, borderColor: alpha(colors.aurora.mint, 0.5) },
   lockedText: { fontFamily: fonts.displayBold, fontSize: 9.5, color: colors.text.tertiary },
-  calloutLayer: { position: 'absolute', left: 0, right: 0, top: -22, alignItems: 'center', zIndex: 5 },
-  callout: { paddingHorizontal: 16, paddingTop: 6, paddingBottom: 4, borderRadius: 14, borderBottomWidth: 5 },
-  calloutText: { fontFamily: fonts.display, fontSize: 26, lineHeight: 34, letterSpacing: -0.3 },
+  // Straddles the board's top rim (the gap above the board), never the tiles themselves.
+  calloutLayer: { position: 'absolute', left: 0, right: 0, top: -36, alignItems: 'center', zIndex: 5 },
+  callout: { paddingHorizontal: 14, paddingTop: 5, paddingBottom: 3, borderRadius: 12 },
+  calloutText: { fontFamily: fonts.display, fontSize: 21, lineHeight: 28, letterSpacing: -0.3 },
 });

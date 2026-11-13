@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withSequence, withTiming, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming, ZoomIn } from 'react-native-reanimated';
 import { isNewBest } from '../../engine';
 import { formatNumber, useLanguage, useStrings } from '../../i18n';
 import { useAppStore } from '../../state/appStore';
 import { useReduceMotion } from '../../state/environment';
-import { alpha, colors, duration, easing, fonts, keyTones, space, tabular, type } from '../../theme';
+import { slab, alpha, colors, duration, easing, fonts, keyTones, space, tabular, type } from '../../theme';
 import { Icon } from '../Icon';
 import { Sticker } from '../primitives';
 
@@ -17,10 +17,14 @@ export function ScoreHeader() {
   const t = useStrings();
   const lang = useLanguage();
   const reduceMotion = useReduceMotion();
-  const score = useAppStore((s) => s.session.board.score);
-  const best = useAppStore((s) => s.stats.bestScore);
+  const score = useShownScore();
+  const committed = useAppStore((s) => s.session.board.score);
+  const bestAtStart = useAppStore((s) => s.session.bestAtStart);
+  const storedBest = useAppStore((s) => s.stats.bestScore);
+  // While this run holds the record, the plate follows the shown score, not the committed one.
+  const best = storedBest === committed ? Math.max(bestAtStart, score) : storedBest;
   // The very first run beats a record of 0 on its first merge; that isn't news.
-  const beating = useAppStore((s) => isNewBest(s.session) && s.session.bestAtStart > 0);
+  const beating = useAppStore((s) => isNewBest(s.session)) && score > bestAtStart && bestAtStart > 0;
   return (
     <View style={styles.row}>
       <View style={styles.current} accessible accessibilityLabel={`${t.game.score} ${score}`}>
@@ -53,6 +57,33 @@ export function ScoreHeader() {
 }
 
 /**
+ * The score as the board shows it: a move's points land when its tiles merge (the resolve
+ * moment), not when the swipe commits. Undo, new game and restore show immediately.
+ */
+function useShownScore() {
+  const [shown, setShown] = useState(() => useAppStore.getState().session.board.score);
+  const reduceMotion = useReduceMotion();
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const unsub = useAppStore.subscribe((st, prev) => {
+      if (st.transition === prev.transition && st.session.board.score === prev.session.board.score) return;
+      clearTimeout(timer);
+      const value = st.session.board.score;
+      if (st.transition !== prev.transition && st.transition.kind === 'move') {
+        timer = setTimeout(() => setShown(value), reduceMotion ? duration.instant : duration.resolve);
+      } else {
+        setShown(value);
+      }
+    });
+    return () => {
+      clearTimeout(timer);
+      unsub();
+    };
+  }, [reduceMotion]);
+  return shown;
+}
+
+/**
  * "+32" popping beside the score. One label per move (the move's total); a new move
  * replaces the label rather than stacking. Positioned absolutely: nothing reflows.
  */
@@ -74,11 +105,14 @@ function ScoreDelta() {
         }
         if (tr.result.scoreGained <= 0) return;
         setAmount(tr.result.scoreGained);
-        o.set(withSequence(withTiming(1, { duration: 80 }), withTiming(1, { duration: 260 }), withTiming(0, { duration: duration.scoreDelta - 260, easing: easing.exit })));
+        // Pops when the tiles merge, together with the score itself.
+        const lag = reduceMotion ? duration.instant : duration.resolve;
+        o.set(withDelay(lag, withSequence(withTiming(1, { duration: 80 }), withTiming(1, { duration: 260 }), withTiming(0, { duration: duration.scoreDelta - 260, easing: easing.exit }))));
         y.set(0);
         if (!reduceMotion) {
-          y.set(withTiming(-14, { duration: duration.scoreDelta + 80, easing: easing.enter }));
-          s.set(withSequence(withTiming(1.25, { duration: 90 }), withTiming(1, { duration: 160 })));
+          y.set(withDelay(lag, withTiming(-14, { duration: duration.scoreDelta + 80, easing: easing.enter })));
+          s.set(1);
+          s.set(withDelay(lag, withSequence(withTiming(1.25, { duration: 90 }), withTiming(1, { duration: 160 }))));
         }
       }),
     [o, y, s, reduceMotion],
@@ -111,12 +145,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border.subtle,
     borderTopColor: colors.border.default,
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgba(3,6,14,0.8)',
+    boxShadow: slab(3, 'rgba(3,6,14,0.8)'),
     transform: [{ rotate: '-3deg' }],
     alignItems: 'flex-end',
   },
-  plateHot: { borderColor: alpha(colors.aurora.champagne, 0.45), borderTopColor: alpha(colors.aurora.champagne, 0.6), boxShadow: `0 0 22px ${alpha(colors.aurora.champagne, 0.25)}` },
+  plateHot: { borderColor: alpha(colors.aurora.champagne, 0.45), borderTopColor: alpha(colors.aurora.champagne, 0.6), boxShadow: `${slab(3, 'rgba(3,6,14,0.8)')}, 0 0 22px ${alpha(colors.aurora.champagne, 0.25)}` },
   plateLabel: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   bestValue: { textAlign: 'right' },
   stickerPos: { position: 'absolute', top: -20, right: -6, left: -80, alignItems: 'flex-end' },

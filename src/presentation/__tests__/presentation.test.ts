@@ -11,15 +11,31 @@ describe('frames', () => {
   ]);
   const result = move(board, 'left', scriptedRng([0, 0.5]));
 
-  it('motion frame keeps old values, includes consumed tiles under survivors, no spawn', () => {
-    const f = motionFrame(result);
-    expect(f.tiles.map((t) => t.id).sort()).toEqual([1, 2, 3]);
+  it('motion frame keeps old values, consumed tiles under survivors, schedules the resolve', () => {
+    const f = motionFrame(result, 7);
+    expect(f.tiles.map((t) => t.id).sort()).toEqual([1, 2, 3, result.spawned!.id].sort());
     const consumed = f.tiles.find((t) => t.id === 2)!;
     expect(consumed.under).toBe(true);
     expect(consumed.cell).toEqual({ row: 0, col: 0 });
     expect(f.tiles[0].id).toBe(2); // drawn first
-    expect(f.tiles.find((t) => t.id === 1)!.value).toBe(2);
-    expect(f.tiles.some((t) => t.spawn)).toBe(false);
+    // Survivor shows its old value now, with the doubled one and the pulse queued.
+    expect(f.tiles.find((t) => t.id === 1)).toMatchObject({ value: 2, next: 4, pulse: 7 });
+    expect(f.tiles.find((t) => t.id === 3)).toMatchObject({ value: 4, pulse: 0 });
+    expect(f.tiles.find((t) => t.id === 3)!.next).toBeUndefined();
+    // The spawn is mounted now (it fades in at the resolve moment), drawn on top.
+    expect(f.tiles.filter((t) => t.spawn).map((t) => t.id)).toEqual([result.spawned!.id]);
+    expect(f.tiles[f.tiles.length - 1].id).toBe(result.spawned!.id);
+  });
+
+  it('resolve changes nothing that is already animating: same pulse key, same spawn', () => {
+    const m = motionFrame(result, 7);
+    const r = resolvedFrame(result, 7);
+    for (const t of r.tiles) {
+      const before = m.tiles.find((x) => x.id === t.id)!;
+      expect(before.pulse).toBe(t.pulse);
+      expect(before.spawn).toBe(t.spawn);
+      expect(before.next ?? before.value).toBe(t.value);
+    }
   });
 
   it('resolved frame has no ghosts, doubled survivor pulses, spawn flagged', () => {
@@ -41,7 +57,7 @@ describe('frames', () => {
   });
 
   it('every surviving tile ends the motion phase where it rests in the resolved frame', () => {
-    const m = motionFrame(result);
+    const m = motionFrame(result, 1);
     const r = resolvedFrame(result, 1);
     for (const t of r.tiles.filter((x) => !x.spawn)) {
       expect(m.tiles.find((x) => x.id === t.id)!.cell).toEqual(t.cell);

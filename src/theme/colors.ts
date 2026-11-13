@@ -93,3 +93,13 @@ export function alpha(hex: string, a: number): string {
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
 }
+
+/**
+ * The solid "slab" under a raised surface, as a box-shadow layer: a copy of the surface's
+ * own rounded shape pushed down by `depth`, with no blur. A thick bottom border would taper
+ * into the corners and leave a dark notch between the face's rounded corner and the slab.
+ * Shadows take no layout space, so give the element `marginBottom: depth` where it matters.
+ */
+export function slab(depth: number, color: string): string {
+  return `0 ${depth}px 0 0 ${color}`;
+}

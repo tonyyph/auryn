@@ -11,7 +11,7 @@ import { isGameOver, maxTile } from '../engine';
 import { formatNumber, useLanguage, useStrings } from '../i18n';
 import { useAppStore } from '../state/appStore';
 import { useEnvironment, useReduceMotion } from '../state/environment';
-import { alpha, colors, easing, fonts, keyTones, radius, shade, space, tabular, tileMaterial, type, type KeyTone } from '../theme';
+import { slab, alpha, colors, easing, fonts, keyTones, radius, shade, space, tabular, tileMaterial, type, type KeyTone } from '../theme';
 
 let launchedIntoGame = false;
 
@@ -103,7 +103,12 @@ export default function Home() {
                 cell={cell}
                 label={inProgress ? t.home.resume : t.home.play}
                 meta={inProgress ? t.home.resumeMeta(formatNumber(board.score, lang), formatNumber(maxTile(board), lang)) : t.home.freshMeta}
-                onPress={() => router.push('/game')}
+                onPress={() => {
+                  // The label promises a fresh board, so a finished run is cleared first
+                  // (it already counted as finished) instead of reopening on "Board locked".
+                  if (isGameOver(useAppStore.getState().session.board)) useAppStore.getState().newGame();
+                  router.push('/game');
+                }}
               />
             </Slot>
             <Slot cell={cell} col={3} row={0} index={1} reduceMotion={reduceMotion}>
@@ -317,9 +322,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border.subtle,
     borderTopColor: colors.border.default,
-    borderBottomWidth: 4,
-    borderBottomColor: 'rgba(3, 6, 14, 0.85)',
-    boxShadow: `0 24px 60px ${alpha(colors.shadow, 0.6)}`,
+    marginBottom: 4,
+    boxShadow: `${slab(4, 'rgba(3, 6, 14, 0.85)')}, 0 24px 60px ${alpha(colors.shadow, 0.6)}`,
   },
   socket: { position: 'absolute', borderRadius: radius.cell, backgroundColor: colors.surface.cellTop, borderTopWidth: 2, borderTopColor: 'rgba(0,0,0,0.35)' },
   playGlow: { position: 'absolute', left: 0, right: 0, top: 0, borderRadius: radius.tile + 4, boxShadow: `0 0 34px 6px ${alpha(colors.aurora.champagne, 0.45)}` },

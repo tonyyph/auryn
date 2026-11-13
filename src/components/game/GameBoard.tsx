@@ -13,7 +13,7 @@ import { TurnController } from '../../presentation/turnController';
 import { useAppStore, type BoardTransition } from '../../state/appStore';
 import { useReduceMotion } from '../../state/environment';
 import { announce, watchScreenReader } from '../../state/screenReader';
-import { alpha, cellOffset, colors, duration, radius, tileMaterial, type GameLayout } from '../../theme';
+import { slab, alpha, cellOffset, colors, duration, radius, tileMaterial, type GameLayout } from '../../theme';
 import { AnimatedTile } from './AnimatedTile';
 import { directionFromPan } from './swipe';
 
@@ -84,14 +84,15 @@ export const GameBoard = forwardRef<GameBoardHandle, Props>(function GameBoard({
       if (tr.kind === 'move') {
         const seq = controller.currentSeq;
         pendingResult.current = tr.result;
-        const f = motionFrame(tr.result);
+        const f = motionFrame(tr.result, seq);
         // A tile spawned by a turn whose resolve was skipped (very fast play) still fades in.
         for (const x of f.tiles) if (!shownIds.current.has(x.id)) x.spawn = true;
         show(f, false);
         setIdle(false);
         cancelAnimation(clock);
         clock.set(0);
-        const ms = reduceMotion ? duration.instant : duration.move;
+        // Tiles keep gliding on their own timing; this clock only decides when the turn resolves.
+        const ms = reduceMotion ? duration.instant : duration.resolve;
         clock.set(
           withTiming(1, { duration: ms }, (finished) => {
             if (finished) scheduleOnRN(finishMotion, seq);
@@ -289,15 +290,13 @@ const styles = StyleSheet.create({
   glow: { position: 'absolute' },
   shell: {
     borderRadius: radius.board,
-    boxShadow: `0 24px 60px ${alpha(colors.shadow, 0.6)}, 0 4px 12px ${alpha(colors.shadow, 0.4)}`,
+    boxShadow: `${slab(4, 'rgba(3, 6, 14, 0.85)')}, 0 24px 60px ${alpha(colors.shadow, 0.6)}, 0 8px 12px ${alpha(colors.shadow, 0.4)}`,
   },
   shellBorder: {
     borderRadius: radius.board,
     borderWidth: 1,
     borderColor: colors.border.subtle,
     borderTopColor: colors.border.default,
-    borderBottomWidth: 4,
-    borderBottomColor: 'rgba(3, 6, 14, 0.85)',
   },
   brackets: { position: 'absolute', left: -9, top: -9, right: -9, bottom: -9 },
   bracket: { position: 'absolute', width: 26, height: 26, borderColor: alpha(colors.aurora.mint, 0.55) },

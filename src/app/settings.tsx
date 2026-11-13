@@ -9,7 +9,7 @@ import { useStrings } from '../i18n';
 import type { Language } from '../persistence/schema';
 import { useAppStore } from '../state/appStore';
 import { useEnvironment } from '../state/environment';
-import { alpha, colors, fonts, keyTones, radius, space, type } from '../theme';
+import { slab, alpha, colors, fonts, keyTones, radius, space, type } from '../theme';
 
 export default function Settings() {
   const t = useStrings();
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
   pressed: { backgroundColor: alpha(colors.surface.pressed, 0.7) },
   segmented: { flexDirection: 'row', padding: 4, gap: 4, borderRadius: radius.control, backgroundColor: colors.background.base, borderWidth: 1, borderColor: colors.border.subtle },
   segment: { minHeight: 38, paddingHorizontal: space[3], borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  segmentOn: { backgroundColor: keyTones.mint.bottom, borderBottomWidth: 3, borderBottomColor: keyTones.mint.depth },
+  segmentOn: { backgroundColor: keyTones.mint.bottom, boxShadow: slab(3, keyTones.mint.depth) },
   segmentPressed: { backgroundColor: alpha(colors.surface.pressed, 0.5) },
   segmentText: { fontFamily: fonts.displayBold, fontSize: 12, color: colors.text.tertiary },
   segmentTextOn: { color: keyTones.mint.text },

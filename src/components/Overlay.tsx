@@ -4,7 +4,7 @@ import { BackHandler, Pressable, ScrollView, StyleSheet, View } from 'react-nati
 import Animated, { FadeIn, FadeInDown, FadeOut, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useReduceMotion } from '../state/environment';
-import { colors, duration, easing, radius, space } from '../theme';
+import { colors, duration, easing, radius, slab, space } from '../theme';
 import { LuminousEdge } from './primitives';
 
 interface Props {
@@ -77,9 +77,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border.default,
     borderTopColor: 'rgba(196, 220, 255, 0.2)',
-    borderBottomWidth: 6,
-    borderBottomColor: '#050912',
-    boxShadow: `0 30px 70px rgba(2,4,10,0.6)`,
+    boxShadow: `${slab(6, '#050912')}, 0 30px 70px rgba(2,4,10,0.6)`,
     overflow: 'hidden',
   },
   sheet: {
@@ -87,8 +85,8 @@ const styles = StyleSheet.create({
     borderRadius: 0,
     borderTopLeftRadius: radius.sheet,
     borderTopRightRadius: radius.sheet,
-    borderBottomWidth: 0,
-    borderBottomColor: 'transparent',
+    // A sheet sits on the screen edge: no slab under it.
+    boxShadow: `0 -10px 40px rgba(2,4,10,0.45)`,
   },
   content: { padding: space[6], gap: space[5] },
 });

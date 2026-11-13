@@ -8,6 +8,7 @@ import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuroraBackground } from '../components/AuroraBackground';
+import { ScreenFade } from '../components/ScreenFade';
 import { initFeedback, stopAllSounds } from '../feedback/feedback';
 import { deviceLanguage } from '../i18n';
 import { flushAll } from '../persistence/storage';
@@ -68,6 +69,7 @@ export default function RootLayout() {
         <AuroraBackground calm={pathname === '/game'} />
         {ready ? (
           <Stack
+            screenLayout={({ children }) => <ScreenFade>{children}</ScreenFade>}
             screenOptions={{
               headerShown: false,
               contentStyle: { backgroundColor: 'transparent' },

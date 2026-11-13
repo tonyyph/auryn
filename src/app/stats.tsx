@@ -7,7 +7,7 @@ import { PrimaryButton, Sticker } from '../components/primitives';
 import { ScreenShell } from '../components/ScreenShell';
 import { formatNumber, useLanguage, useStrings } from '../i18n';
 import { useAppStore } from '../state/appStore';
-import { alpha, colors, fonts, keyTones, shade, space, tabular, tileMaterial, type } from '../theme';
+import { alpha, colors, fonts, keyTones, shade, slab, space, tabular, tileMaterial, type } from '../theme';
 
 export default function Stats() {
   const t = useStrings();
@@ -91,9 +91,10 @@ const styles = StyleSheet.create({
     gap: space[2],
     borderRadius: 24,
     overflow: 'hidden',
-    borderBottomWidth: 6,
-    borderBottomColor: keyTones.gold.depth,
-    boxShadow: `0 12px 30px ${alpha(colors.aurora.champagne, 0.2)}`,
+    // Under the face's anti-aliased edge: the slab colour, not the sky.
+    backgroundColor: keyTones.gold.depth,
+    marginBottom: 6,
+    boxShadow: `${slab(6, keyTones.gold.depth)}, 0 18px 30px ${alpha(colors.aurora.champagne, 0.2)}`,
   },
   trophyFace: { borderRadius: 24 },
   trophyIcon: { position: 'absolute', right: 14, top: 14, transform: [{ rotate: '12deg' }] },

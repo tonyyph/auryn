@@ -72,7 +72,7 @@ Uploading to TestFlight does not release the app publicly on the App Store.
 ## Checks
 
 ```sh
-pnpm verify         # tsc --noEmit + expo lint + jest (124 tests)
+pnpm verify         # tsc --noEmit + expo lint + jest (129 tests)
 ```
 
 | Suite | Covers |
@@ -100,12 +100,15 @@ tools/             generate-assets.mjs, generate-sounds.mjs
 ```
 
 **A turn.** A swipe commits to the store immediately (rules state is never behind). The board
-then shows a *motion frame*: every tile slides to its destination still showing its old value,
-and consumed tiles slide underneath their survivors. When the 120 ms slide finishes (a Reanimated
-completion callback, not a JS timer), the *resolved frame* swaps in. Consumed tiles disappear
-under their survivor, the survivor shows its doubled value with a 1 → 1.06 → 1 pulse and a halo,
-and the spawned tile fades and scales in from 0.88. Tiles are keyed by stable engine ids, so
-nothing remounts between frames.
+then shows a *motion frame*: every tile slides (120 ms, hard ease-out) to its destination still
+showing its old value, and consumed tiles slide underneath their survivors. Everything the turn
+resolves into is scheduled with that frame on the UI thread, delayed to the *resolve moment*
+(`duration.resolve`, 80 ms, when the slide has covered ≈98% of its distance): the survivor swaps
+to its doubled value with a 1 → 1.06 → 1 pulse and a halo, consumed tiles vanish, the spawned
+tile fades and scales in from 0.88, and the score, "+N" and combo callout land. Because none of
+this waits on React, it stays in sync on a busy JS thread. The *resolved frame* that follows
+(a Reanimated completion callback) is visually identical; it only drops the consumed tiles and
+second faces. Tiles are keyed by stable engine ids, so nothing remounts between frames.
 
 **Input while animating.** At most one direction is buffered, and a newer swipe replaces it. It
 commits when the slide ends, against the latest state. Undo, restart, leaving the screen and
